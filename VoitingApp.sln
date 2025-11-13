@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToDoApp", "ToDoApp\ToDoApp.csproj", "{0F6CD02C-A9E2-41AB-93C6-19A5F95B3224}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VoitingApp.Api", "VoitingApp.Api\VoitingApp.Api.csproj", "{0F6CD02C-A9E2-41AB-93C6-19A5F95B3224}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
