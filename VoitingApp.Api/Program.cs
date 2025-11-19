@@ -12,7 +12,12 @@ builder.Services.AddSingleton<IPolesRepository, PolesRepository>();
 
 builder.Services.AddAutoMapper(cfg =>
 {
-    cfg.CreateMap<CreatePoleDto, PoleDto>();
+    cfg.CreateMap<PoleEntity, PoleDto>();
+    cfg.CreateMap<CreatePoleDto, PoleEntity>();
+    cfg.CreateMap<CreateOptionDto, OptionEntity>();
+    cfg.CreateMap<OptionEntity, OptionDto>();
+    cfg.CreateMap<OptionEntity, OptionResultsDto>();
+    cfg.CreateMap<PoleEntity, PoleResultsDto>();
 }, Array.Empty<Assembly>());
 
 var app = builder.Build();

@@ -8,5 +8,5 @@ public class CreatePoleDto
     [Required]
     public string Question { get; set; }
     [Required]
-    public List<OptionEntity> Options { get; set; }
+    public List<CreateOptionDto> Options { get; set; }
 }

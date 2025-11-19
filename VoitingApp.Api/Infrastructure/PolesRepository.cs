@@ -10,6 +10,7 @@ public class PolesRepository : IPolesRepository
             throw new InvalidOperationException();
         var id = Guid.NewGuid();
         var entity = Clone(id, pole);
+        InitOptionsId(entity);
         _entities[id] = entity;
         return Clone(id, entity);
     }
@@ -19,6 +20,34 @@ public class PolesRepository : IPolesRepository
         return _entities.TryGetValue(poleId, out var entity) ? Clone(poleId, entity) : null;
     }
 
+    public void UpdateVotes(Guid poleId, List<Guid> optionsIds)
+    {
+        var pole = _entities[poleId];
+        foreach (var option in pole.Options.Where(option => optionsIds.Contains(option.Id)))
+        {
+            option.VotesCount += 1;
+        }
+    }
+
+    public IEnumerable<PoleEntity> GetAll()
+    {
+        return _entities.Values.Select(x => Clone(x.Id, x));
+    }
+
+    public void Delete(Guid poleId)
+    {
+        _entities.Remove(poleId);
+    }
+
+    private static void InitOptionsId(PoleEntity pole)
+    {
+        foreach (var option in pole.Options)
+        {
+            option.Id = Guid.NewGuid();
+            option.PoleId = pole.Id;
+        }
+    }
+    
     private static PoleEntity Clone(Guid id, PoleEntity pole)
     {
         return new PoleEntity(id, pole.Question, pole.CreatedAt, pole.Options);

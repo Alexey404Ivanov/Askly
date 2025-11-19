@@ -42,10 +42,42 @@ public class PolesController : ControllerBase
         return CreatedAtRoute(nameof(GetPoleById), new{poleId=insertedPole.Id}, insertedPole.Id);
     }
     
+    [HttpGet]
+    [Produces("application/json")]
+    public ActionResult<IEnumerable<PoleDto>> GetPoles()
+    {
+        var poles = _polesRepository.GetAll();
+        return Ok(_mapper.Map<IEnumerable<PoleDto>>(poles));
+    }
     
-    // [HttpGet]
-    // public ActionResult<IEnumerable<PoleEntity>> GetPoles()
-    // {
-    //     return "Hello, World!";
-    // }
+    [HttpDelete("{poleId}")]
+    public ActionResult DeletePole([FromRoute] Guid poleId)
+    {
+        if (_polesRepository.FindById(poleId) == null)
+            return NotFound();
+        _polesRepository.Delete(poleId);
+        return NoContent();
+    }
+    
+    [HttpPost("{pollId}/vote")]
+    [Produces("application/json")]
+    public ActionResult Vote([FromRoute] Guid pollId, [FromBody] List<Guid> optionsIds)
+    {
+        var pole = _polesRepository.FindById(pollId);
+        if (pole == null)
+            return NotFound();
+        _polesRepository.UpdateVotes(pollId, optionsIds);
+        return NoContent();
+    }
+
+    [HttpGet("{pollId}/results")]
+    [Produces("application/json")]
+    public ActionResult<PoleResultsDto> ShowResults([FromRoute] Guid pollId)
+    {
+        var pole = _polesRepository.FindById(pollId);
+        if (pole == null)
+            return NotFound();
+        var resultsDto = _mapper.Map<PoleResultsDto>(pole);
+        return Ok(resultsDto);
+    }
 }
