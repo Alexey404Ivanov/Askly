@@ -30,6 +30,8 @@ builder.Services.AddAutoMapper(cfg =>
 
 var app = builder.Build();
 
+app.MapGet("/", () => Results.Redirect("/poles"));
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

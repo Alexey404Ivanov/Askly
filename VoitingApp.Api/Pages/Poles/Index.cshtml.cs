@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using VoitingApp.Models;
 
-namespace VoitingApp.Pages;
+namespace VoitingApp.Pages.Poles;
 
 public class IndexModel : PageModel
 {
