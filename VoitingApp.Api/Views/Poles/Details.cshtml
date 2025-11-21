@@ -123,6 +123,66 @@
         border: none;
     }
 
+    /* отключаем видимую заливку при hover для кнопки "Отменить голос" */
+    .cancel-button:hover {
+        background-color: #e0e0e0; /* оставляем тот же цвет — без смены */
+    }
+
+    /* ...остальные стили остались без изменений... */
+
+    /* Контейнер для тостов (стек в правом нижнем углу) */
+    .toast-container {
+        position: fixed;
+        bottom: 1rem;    /* перемещено в правый нижний угол */
+        right: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        z-index: 10000;
+        pointer-events: none;
+        align-items: flex-end; /* выравнивание тостов по правому краю */
+    }
+
+    .toast {
+        pointer-events: auto;
+        background: #6a1b9a;
+        color: #fff;
+        padding: 0.7rem 0.9rem;
+        border-radius: 8px;
+        min-width: 220px;
+        max-width: 380px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        opacity: 1;
+        transform: translateY(0);
+        transition: opacity 0.35s ease, transform 0.35s ease;
+        font-weight: 600;
+    }
+
+    .toast.hide {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+
+    .toast .toast-text {
+        flex: 1;
+        padding-right: 0.5rem;
+    }
+
+    .toast .toast-close {
+        background: transparent;
+        border: none;
+        color: #fff;
+        font-size: 1.05rem;
+        cursor: pointer;
+        line-height: 1;
+        padding: 0 0.25rem;
+    }
+
     /* Адаптивность */
     @@media (max-width: 768px) {
         .page-header {
@@ -154,16 +214,18 @@
                 <div class="poll-options">
                     @foreach (var option in Model.Options)
                     {
-                    <label class="option-item">
-                        <input type="radio" name="selectedOptions" value="@option.Id" required>
-                        @option.Text
-                    </label>
+                        <label class="option-item">
+                            <input type="radio" name="selectedOptions" value="@option.Id" required>
+                            @option.Text
+                        </label>
                     }
                 </div>
             </fieldset>
             <button type="submit" id="voteBtn" class="vote-button">Голосовать</button>
         </form>
     </div>
+    
+    <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
 </main>
 
 
