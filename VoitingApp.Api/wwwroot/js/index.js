@@ -57,7 +57,7 @@ window.addEventListener("click", (e) => {
 });
 
 function openPoll(id) {
-    alert("Открыть опрос " + id);
+    window.location.href = `/poles/${id}`;
 }
 
 poleCreate.addEventListener("click", function() {

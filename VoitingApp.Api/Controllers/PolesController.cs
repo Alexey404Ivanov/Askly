@@ -21,8 +21,8 @@ public class PolesController: Controller
         return View("Index", poles);
     }
 
-    [HttpGet("/poles/{id}")]
-    public async Task<IActionResult> Details(int id)
+    [HttpGet("/poles/{id:guid}")]
+    public async Task<IActionResult> Details(Guid id)
     {
         var pole = await _client.GetFromJsonAsync<PoleDto>(
             $"http://localhost:5000/api/poles/{id}");

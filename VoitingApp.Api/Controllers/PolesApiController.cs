@@ -19,7 +19,7 @@ public class PolesApiController : ControllerBase
         _mapper = mapper;
     }
     
-    [HttpGet("{poleId}", Name = nameof(GetPoleById))]
+    [HttpGet("{poleId:guid}", Name = nameof(GetPoleById))]
     [Produces("application/json")]
     public ActionResult<PoleDto> GetPoleById([FromRoute] Guid poleId)
     {
