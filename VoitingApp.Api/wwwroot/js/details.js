@@ -23,21 +23,16 @@ document.addEventListener('DOMContentLoaded', function () {
         closeBtn.addEventListener('click', () => hideToast(toast));
         toast.appendChild(closeBtn);
 
-        // Добавляем в контейнер
         toastContainer.prepend(toast);
 
-        // Делаем рендер и включаем класс show для плавного появления
         requestAnimationFrame(() => {
-            // небольшой следующий кадр для корректного запуска transition
             requestAnimationFrame(() => toast.classList.add('show'));
         });
 
-        // Автоудаление
         const removeTimer = setTimeout(() => hideToast(toast), timeout);
 
         function hideToast(node) {
             clearTimeout(removeTimer);
-            // убираем класс show и добавляем hide — CSS обработает анимацию
             node.classList.remove('show');
             node.classList.add('hide');
             node.addEventListener('transitionend', () => {
@@ -66,7 +61,6 @@ document.addEventListener('DOMContentLoaded', function () {
     voteBtn.addEventListener('click', function (e) {
         e.preventDefault();
 
-        // Проверка: есть ли выбранные варианты в ближайшей форме (или в документе)
         const formScope = voteBtn.closest('form') || document;
         const anyChecked = formScope.querySelector('input[type="radio"]:checked, input[type="checkbox"]:checked');
 
@@ -75,6 +69,44 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        // Собираем poleId из скрытого поля формы (asp-for="Id")
+        const poleInput = formScope.querySelector('input[name="Id"], input[id="Id"], input[type="hidden"]');
+        const poleId = poleInput ? String(poleInput.value) : '';
+
+        // Собираем выбранные optionsId
+        let optionsId = [];
+        const checkedCheckboxes = Array.from(formScope.querySelectorAll('input.option-checkbox:checked'));
+        if (checkedCheckboxes.length > 0) {
+            optionsId = checkedCheckboxes.map(i => String(i.value));
+        } else {
+            const checkedRadio = formScope.querySelector('input[type="radio"]:checked');
+            if (checkedRadio) optionsId.push(String(checkedRadio.value));
+        }
+
+        const payload = {
+            poleId: poleId,
+            optionsId: optionsId
+        };
+
+        fetch(`/api/poles/${poleId}/vote`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        })
+        .then(r => {
+            if (!r.ok) throw new Error("Ошибка голосования");
+        })
+        
+        
+        fetch(`/api/poles/${poleId}/results`, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" }
+        })
+        .then(r => {
+            if (!r.ok) throw new Error("Ошибка получения результатов");
+            return r.json();
+        })
+        
         const cancel = createCancelButton(voteBtn);
         voteBtn.replaceWith(cancel);
         showToast('Голос принят');
