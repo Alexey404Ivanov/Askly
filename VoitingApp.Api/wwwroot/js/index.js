@@ -1,18 +1,71 @@
-﻿const modalBackdrop = document.getElementById("modalBackdrop");
+﻿// Файл: `VoitingApp.Api/wwwroot/js/index.js`
+const modalBackdrop = document.getElementById("modalBackdrop");
 const modal = document.getElementById("modal");
 const btnAdd = document.getElementById("btnAdd");
 const modalClose = document.getElementById("modalClose");
 const poleCreate = document.getElementById("poleCreate");
-
+const poleContainer = document.getElementById("answers");
 let answerCount = 0;
 const maxAnswers = 10;
 
+function ensureWarningElement() {
+    let warn = document.getElementById("formWarning");
+    if (!warn) {
+        warn = document.createElement("div");
+        warn.id = "formWarning";
+        warn.style.color = "red";
+        warn.style.marginTop = "8px";
+        warn.style.fontSize = "0.95rem";
+        warn.style.display = "none";
+        // вставляем предупреждение под контейнер с вариантами, если он есть
+        if (poleContainer && poleContainer.parentElement) {
+            poleContainer.parentElement.insertBefore(warn, poleContainer.nextSibling);
+        } else {
+            document.body.appendChild(warn);
+        }
+    }
+    return warn;
+}
+
+function showWarning(text) {
+    const warn = ensureWarningElement();
+    warn.innerText = text;
+    warn.style.display = "block";
+}
+
+function hideWarning() {
+    const warn = document.getElementById("formWarning");
+    if (warn) warn.style.display = "none";
+}
+
+function markInputError(input) {
+    input.style.borderColor = "red";
+    input.style.outline = "none";
+}
+
+function clearInputError(input) {
+    input.style.borderColor = "";
+    input.style.outline = "";
+}
+
+function addInputListeners(input) {
+    input.addEventListener("input", () => {
+        if (input.value.trim() !== "") {
+            clearInputError(input);
+            // если больше никаких ошибок — скрыть предупреждение
+            const anyError = Array.from(document.querySelectorAll("#answers .answer-row input"))
+                .some(i => i.value.trim() === "");
+            const questionEmpty = document.getElementById("questionInput")?.value.trim() === "";
+            if (!anyError && !questionEmpty) hideWarning();
+        }
+    });
+}
 
 function addAnswer() {
     if (answerCount >= maxAnswers) return;
 
     answerCount++;
-    
+
     const container = document.getElementById("answers");
 
     const row = document.createElement("div");
@@ -25,6 +78,10 @@ function addAnswer() {
     `;
 
     container.appendChild(row);
+
+    const input = row.querySelector("input");
+    addInputListeners(input);
+
     const hint = document.getElementById("hint");
     hint.innerText = `Можно добавить ещё ${maxAnswers - answerCount} вариантов ответа.`;
 }
@@ -33,8 +90,9 @@ function removeAnswer(btn) {
     const row = btn.parentElement;
     row.remove();
     answerCount--;
+    const hint = document.getElementById("hint");
+    hint.innerText = `Можно добавить ещё ${maxAnswers - answerCount} вариантов ответа.`;
 }
-
 
 btnAdd.addEventListener("click", () => {
     modalBackdrop.style.display = "flex";
@@ -46,13 +104,12 @@ btnAdd.addEventListener("click", () => {
 
 modalClose.addEventListener("click", () => {
     modalBackdrop.style.display = "none";
-    // modal.style.display = "none";
 });
 
 // Закрытие при клике по фону
 window.addEventListener("click", (e) => {
-    if (e.target === modal) {
-        modal.display = "none";
+    if (e.target === modalBackdrop) {
+        modalBackdrop.style.display = "none";
     }
 });
 
@@ -61,8 +118,11 @@ function openPoll(id) {
 }
 
 poleCreate.addEventListener("click", function() {
+    hideWarning();
+
     // 1. Получаем текст вопроса
-    const question = document.getElementById("questionInput").value;
+    const questionInput = document.getElementById("questionInput");
+    const question = questionInput?.value.trim() ?? "";
 
     // 2. Получаем все варианты ответа
     const answerInputs = document.querySelectorAll("#answers .answer-row input");
@@ -70,13 +130,53 @@ poleCreate.addEventListener("click", function() {
     answerInputs.forEach(input => {
         const value = input.value.trim();
         if (value) {
-            answers.push({ text: value }); // ← завернули в объект
+            answers.push({ text: value });
         }
     });
+
+    // Валидация: вопрос не пустой
+    let hasError = false;
+    if (!question) {
+        showWarning("Поле вопроса не должно быть пустым.");
+        if (questionInput) markInputError(questionInput);
+        hasError = true;
+    } else if (questionInput) {
+        clearInputError(questionInput);
+    }
     
-    console.log(question, answers);
+    if (answerInputs.length === 0) {
+        showWarning("Нет доступных вариантов ответа")
+        hasError = true;
+        return;
+    }
+
+    // Валидация: все варианты не пустые и их должно быть хотя бы 1
+    if (answers.length < answerInputs.length) {
+        if (hasError) showWarning("Поля вопроса и ответов не заполнены")
+        else showWarning("Не все варианты заполнены");
+        
+        hasError = true;
+    } else {
+        // подсветка пустых
+        answerInputs.forEach(input => {
+            if (input.value.trim() === "") {
+                markInputError(input);
+                hasError = true;
+            } else {
+                clearInputError(input);
+            }
+            // добавляем слушатель на ввод для очистки ошибки
+            addInputListeners(input);
+        });
+        if (hasError && !document.getElementById("formWarning")?.innerText) {
+            showWarning("Пожалуйста, заполните все варианты ответа.");
+        }
+    }
+
+    if (hasError) return; // отменяем отправку
+
     // 3. Получаем флаг "несколько ответов"
-    const multipleAnswers = document.getElementById("multi").checked;
+    const multipleAnswers = document.getElementById("multi")?.checked;
 
     // 4. Собираем объект
     const questionObj = {
@@ -86,12 +186,9 @@ poleCreate.addEventListener("click", function() {
     };
 
     // 5. Сериализуем в JSON
-    const json = JSON.stringify(questionObj, null, 2); // красиво с отступами
+    const json = JSON.stringify(questionObj, null, 2);
 
-    // 6. Можно проверить результат в консоли или отправить на сервер
-    console.log(json);
-
-    // Например, отправка на сервер через fetch:
+    // 6. Отправка на сервер
     fetch("/api/poles", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

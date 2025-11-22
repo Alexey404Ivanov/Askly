@@ -1,3 +1,38 @@
+/* Кнопка-логотип в хедере */
+.logo-button {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+/* Размер картинки под высоту .page-header */
+.logo-button img {
+    height: 80px; /* при необходимости подберите значение */
+    width: auto;
+    display: block;
+    pointer-events: none; /* чтобы клики шли на кнопку */
+}
+
+/*!* Эффект при наведении и фокусе *!*/
+/*.logo-button:hover,*/
+/*.logo-button:focus {*/
+/*    transform: scale(1.03);*/
+/*    outline: none;*/
+/*}*/
+
+/*!* Доступный фокус (опционально) *!*/
+/*.logo-button:focus-visible {*/
+/*    box-shadow: 0 0 0 3px rgba(106,27,154,0.18);*/
+/*}*/
+
+
+
 /* Общие стили */
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;

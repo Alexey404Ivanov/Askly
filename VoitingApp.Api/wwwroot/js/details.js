@@ -4,7 +4,6 @@
 
     if (!voteBtn) return;
 
-    // Показывает тост с сообщением; возвращает функцию для немедленного удаления
     function showToast(message, timeout = 4000) {
         if (!toastContainer) return () => {};
 
@@ -23,38 +22,40 @@
         closeBtn.addEventListener('click', () => hideToast(toast));
         toast.appendChild(closeBtn);
 
-        // Добавляем в начало контейнера, чтобы стековать сверху вниз
+        // Добавляем в контейнер
         toastContainer.prepend(toast);
+
+        // Делаем ререндер и включаем класс show для плавного появления
+        requestAnimationFrame(() => {
+            // небольшой следующий кадр для корректного запуска transition
+            requestAnimationFrame(() => toast.classList.add('show'));
+        });
 
         // Автоудаление
         const removeTimer = setTimeout(() => hideToast(toast), timeout);
 
         function hideToast(node) {
             clearTimeout(removeTimer);
+            // убираем класс show и добавляем hide — CSS обработает анимацию
+            node.classList.remove('show');
             node.classList.add('hide');
             node.addEventListener('transitionend', () => {
                 if (node.parentNode) node.parentNode.removeChild(node);
             }, { once: true });
         }
 
-        // Возвращаем функцию, которая немедленно удалит тост
         return () => hideToast(toast);
     }
 
-    // Функция создаёт кнопку "Отменить голос"
     function createCancelButton(original) {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.id = 'cancelBtn';
-        // сохраняем классы, чтобы размер/отступы совпадали
         btn.className = original.className + ' cancel-button';
         btn.textContent = 'Отменить голос';
 
-        // при нажатии отменяем — возвращаем исходную кнопку и показываем тост
         btn.addEventListener('click', function () {
-            // заменяем обратно на оригинал
             btn.replaceWith(original);
-            // показываем уведомление
             showToast('Голос отменен');
         });
 
@@ -62,14 +63,9 @@
     }
 
     voteBtn.addEventListener('click', function (e) {
-        // предотвращаем немедленную отправку формы — только визуальная замена
         e.preventDefault();
-
-        // создаём кнопку отмены и меняем местами
         const cancel = createCancelButton(voteBtn);
         voteBtn.replaceWith(cancel);
-
-        // показываем уведомление
         showToast('Голос принят');
     });
-});
+})
