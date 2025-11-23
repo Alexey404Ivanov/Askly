@@ -22,12 +22,13 @@ public class PolesRepository : IPolesRepository
         return _entities.TryGetValue(poleId, out var entity) ? Clone(poleId, entity) : null;
     }
 
-    public void UpdateVotes(Guid poleId, List<Guid> optionsIds)
+    public void UpdateVotes(Guid poleId, List<Guid> optionsIds, bool isVoteReset)
     {
         var pole = _entities[poleId];
         foreach (var option in pole.Options.Where(option => optionsIds.Contains(option.Id)))
         {
-            option.VotesCount += 1;
+            if (!isVoteReset) option.VotesCount++;
+            else option.VotesCount--;
         }
     }
 

@@ -51,7 +51,7 @@ public class PolesApiController : ControllerBase
         return Ok(_mapper.Map<IEnumerable<PoleDto>>(poles));
     }
     
-    [HttpDelete("{poleId}")]
+    [HttpDelete("{poleId:guid}")]
     public ActionResult DeletePole([FromRoute] Guid poleId)
     {
         if (_repo.FindById(poleId) == null)
@@ -60,18 +60,29 @@ public class PolesApiController : ControllerBase
         return NoContent();
     }
     
-    [HttpPost("{pollId}/vote")]
+    [HttpDelete("{pollId:guid}/vote")]
+    [Produces("application/json")]
+    public ActionResult DeleteVote([FromRoute] Guid pollId, [FromBody] List<Guid> optionsIds)
+    {
+        var pole = _repo.FindById(pollId);
+        if (pole == null)
+            return NotFound();
+        _repo.UpdateVotes(pollId, optionsIds, true);
+        return NoContent();
+    }
+    
+    [HttpPost("{pollId:guid}/vote")]
     [Produces("application/json")]
     public ActionResult Vote([FromRoute] Guid pollId, [FromBody] List<Guid> optionsIds)
     {
         var pole = _repo.FindById(pollId);
         if (pole == null)
             return NotFound();
-        _repo.UpdateVotes(pollId, optionsIds);
+        _repo.UpdateVotes(pollId, optionsIds, false);
         return NoContent();
     }
 
-    [HttpGet("{pollId}/results")]
+    [HttpGet("{pollId:guid}/results")]
     [Produces("application/json")]
     public ActionResult<PoleResultsDto> ShowResults([FromRoute] Guid pollId)
     {
