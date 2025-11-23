@@ -65,37 +65,37 @@ document.addEventListener('DOMContentLoaded', function () {
         const totalVotes = results.options.reduce(
             (sum, o) => sum + (o.votesCount || 0),
             0
-        ) || 1; // чтобы не делить на 0
+        );
 
+        // если нет голосов — считаем total = 1 чтобы корректно показать 0%
+        const safeTotal = totalVotes === 0 ? 1 : totalVotes;
         results.options.forEach(option => {
             const optionId = option.id;
             const votes = option.votesCount || 0;
-            const percent = Math.round((votes / totalVotes) * 100);
+            const percent = Math.round((votes / safeTotal) * 100);
 
             // ищем input по value == id
-            const input = formScope.querySelector(
-                'input[value="' + optionId + '"]'
-            );
+            const input = formScope.querySelector('input[value="' + optionId + '"]');
             if (!input) return;
 
-            const wrapper = input.closest('.option-wrapper') || input.closest('label') || input.parentElement;
+            // получаем wrapper (label.option-item)
+            const wrapper = input.closest('.option-item') || input.parentElement;
             if (!wrapper) return;
-
-            // добавим класс, который чуть "укорачивает" кнопку
             wrapper.classList.add('option-with-results');
 
-            // если результат уже добавлен, просто обновим текст
+            // если результат уже добавлен, обновим, иначе создадим и поместим в конец
             let resultSpan = wrapper.querySelector('.option-result');
             if (!resultSpan) {
                 resultSpan = document.createElement('span');
                 resultSpan.className = 'option-result';
+                // вставляем в конец, чтобы всегда быть справа
                 wrapper.appendChild(resultSpan);
             }
 
             resultSpan.textContent = votes + ' (' + percent + '%)';
         });
     }
-
+    
     voteBtn.addEventListener('click', function (e) {
         e.preventDefault();
 

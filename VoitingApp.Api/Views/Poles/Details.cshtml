@@ -274,6 +274,54 @@
         margin-top: 1rem;
         font-weight: 600;
     }
+
+    /* Разметка варианта как flex: текст слева, результат справа */
+    .option-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 1rem;
+        background-color: #f4f7f6;
+        border-radius: 8px;
+        transition: background-color 0.2s ease, padding-right 0.35s ease;
+        overflow: hidden;
+    }
+    
+    .option-item .option-text {
+        flex: 1 1 auto;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin-left: 0.5rem; /* отступ от чекбокса/радио */
+    }
+
+    /* место для результатов */
+    .option-result {
+        margin-left: 0.75rem;
+        font-weight: 700;
+        color: #6a1b9a;
+        min-width: 64px;
+        text-align: right;
+        flex: 0 0 auto;
+    }
+    
+    /* при наличии результатов можно слегка изменить вид (плавное сужение текста) */
+    .option-with-results .option-text {
+        transition: max-width 0.28s ease;
+    }
+
+    /* делаем input'ы чуть ближе к началу и сохраним масштаб */
+    .option-item input {
+        margin-right: 0.6rem;
+        transform: scale(1.18);
+    }
+
+    /* небольшая адаптация для мобильных — чтобы счетчик не ломал верстку */
+    @@media (max-width: 420px) {
+    .option-result { min-width: 48px; font-size: 0.95rem; }
+    .option-item { padding: 0.9rem; }
+    }
     
 </style>
 
@@ -296,14 +344,14 @@
                         {
                             <label class="option-item">
                                 <input type="checkbox" name="selectedOptions" value="@option.Id" class="option-checkbox">
-                                @option.Text
+                                <span class="option-text">@option.Text</span>
                             </label>
                         }
                         else
                         {
                             <label class="option-item">
                                 <input type="radio" name="selectedOptions" value="@option.Id" required>
-                                @option.Text
+                                <span class="option-text">@option.Text</span>
                             </label>
                         }
                     }
