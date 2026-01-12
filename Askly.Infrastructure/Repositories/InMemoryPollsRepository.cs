@@ -4,7 +4,7 @@ using Askly.Domain.Entities;
 
 namespace Askly.Infrastructure.Repositories;
 
-public class PollsRepository : IPollsRepository
+public class InMemoryPollsRepository : IPollsRepository
 {
     private readonly Dictionary<Guid, PollEntity> _entities = new();
 

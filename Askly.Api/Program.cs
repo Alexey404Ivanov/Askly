@@ -31,7 +31,7 @@ builder.Services.AddHttpClient();
 
 builder.Services.AddSingleton<IPollService, PollService>();
 
-builder.Services.AddSingleton<IPollsRepository, PollsRepository>();
+builder.Services.AddSingleton<IPollsRepository, InMemoryPollsRepository>();
 
 builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
 
