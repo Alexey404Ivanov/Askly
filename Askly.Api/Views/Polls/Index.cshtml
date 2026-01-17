@@ -7,8 +7,36 @@
 
 @section HeaderExtras
 {
-    <button id="btnAdd" class="add-button">Добавить</button>
+    <style>
+        .header-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            gap: 12px;
+        }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        /* Доп. класс, чтобы не ломать существующий стиль add-button */
+        .btn-palette {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: fit-content;
+            box-sizing: border-box;
+        }
+    </style>
+
+    <div class="header-actions">
+        <button id="btnAdd" class="add-button btn-palette">Создать опрос</button>
+        <button id="btnRegister" class="add-button btn-palette" onclick="switchToRegistration()">Зарегистрироваться</button>
+        <button id="btnLogin" class="add-button btn-palette" onclick="switchToAuthorization()">Войти</button>
+    </div>
 }
+
 
 <main class="main-content" role="main">
     <div class="poll-grid" id="pollGrid" aria-live="polite">

@@ -9,7 +9,7 @@ public class PollsController: Controller
 
     public PollsController(IHttpClientFactory factory)
     {
-        _client = factory.CreateClient("ApiClient");
+        _client = factory.CreateClient("PollsApiClient");
     }
 
     [HttpGet("/polls")]
@@ -27,7 +27,6 @@ public class PollsController: Controller
         var poll = await _client.GetFromJsonAsync<PollDto>(
             $"http://localhost:5000/api/polls/{pollId}");
         
-
         return View("Details", poll);
     }
 }

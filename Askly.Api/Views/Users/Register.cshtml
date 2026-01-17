@@ -1,0 +1,89 @@
+﻿@{
+    ViewData["Title"] = "Регистрация нового аккаунта";
+    Layout = "_Layout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/details.css" />
+}
+
+<main class="main-content" role="main">
+    <div class="poll-details">
+        <h2 class="poll-question">Регистрация</h2>
+
+        <form method="post" id="registerForm" class="poll-form">
+            <fieldset>
+                <div class="poll-options">
+                    <label class="option-item">
+                        <input type="text" name="Name" id="regName" required placeholder="Введите ваше имя" />
+                        <span class="option-text">Ваше имя</span>
+                    </label>
+
+                    <label class="option-item">
+                        <input type="email" name="Email" id="regEmail" required placeholder="Введите e-mail" />
+                        <span class="option-text">E-mail</span>
+                    </label>
+
+                    <label class="option-item">
+                        <input type="password" name="Password" id="regPassword" required minlength="6" placeholder="Введите пароль" />
+                        <span class="option-text">Пароль</span>
+                    </label>
+                </div>
+            </fieldset>
+
+            <div id="validationContainer"></div>
+
+            <button type="submit" id="registerBtn" class="vote-button">Зарегистрироваться</button>
+        </form>
+    </div>
+
+    <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+</main>
+
+<script>
+    // Небольшая валидация и уведомление, reuse стили тостов
+    (function () {
+        const form = document.getElementById('registerForm');
+        const toastContainer = document.getElementById('toastContainer');
+
+        if (!form) return;
+
+        function showToast(message, timeout = 4000) {
+            if (!toastContainer) return;
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = '<div class="toast-text"></div>';
+            toast.querySelector('.toast-text').textContent = message;
+
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'toast-close';
+            closeBtn.setAttribute('aria-label', 'Закрыть');
+            closeBtn.innerHTML = '&times;';
+            closeBtn.addEventListener('click', () => hideToast(toast));
+            toast.appendChild(closeBtn);
+
+            toastContainer.prepend(toast);
+            requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('show')));
+
+            const timer = setTimeout(() => hideToast(toast), timeout);
+            function hideToast(node) {
+                clearTimeout(timer);
+                node.classList.remove('show');
+                node.classList.add('hide');
+                node.addEventListener('transitionend', () => node.parentNode && node.parentNode.removeChild(node), { once: true });
+            }
+        }
+
+        form.addEventListener('submit', function (e) {
+            const name = document.getElementById('regName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value;
+
+            if (!name || !email || !password) {
+                e.preventDefault();
+                showToast('Заполните все поля');
+                return;
+            }
+        });
+    })();
+</script>

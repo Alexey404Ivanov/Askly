@@ -112,6 +112,14 @@ window.addEventListener("click", (e) => {
     }
 });
 
+function switchToRegistration() {
+    window.location.href = "/register";
+}
+
+function switchToAuthorization() {
+    window.location.href = "/login";
+}
+
 function openPoll(id) {
     window.location.href = `/polls/${id}`;
 }
