@@ -4,3 +4,144 @@
     ViewData["Title"] = "Аккаунт";
     Layout = "_Layout";
 }
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/details.css" />
+    <style>
+        /* Чуть шире, чем в Register.cshtml */
+        .poll-details.profile-details {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .poll-form fieldset {
+            border: 0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .poll-form .poll-options {
+            margin: 10px 0 16px;
+            padding: 0;
+        }
+
+        /* Строка: подпись слева + инпут справа */
+        .form-row {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 14px;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .form-label {
+            font-size: 16px;
+            color: #111827;
+            white-space: nowrap;
+        }
+
+        .form-input {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 18px;
+            line-height: 1.5;
+            padding: 14px 16px;
+            min-height: 52px;
+            border: 1px solid #c9ced6;
+            border-radius: 16px;
+            background: #fff;
+            color: #111827;
+            outline: none;
+            transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+        }
+
+        .form-input:focus {
+            border-color: #6a9cff;
+            box-shadow: 0 0 0 3px rgba(106, 156, 255, 0.2);
+            background: #fff;
+        }
+
+        .section-title {
+            margin-top: 22px;
+        }
+
+        .vote-button#saveProfileBtn,
+        .vote-button#changePasswordBtn {
+            font-size: 18px;
+            padding: 12px 18px;
+            border-radius: 10px;
+        }
+
+        /* Чтобы на узких экранах подписи не ломали вёрстку */
+        @* @media (max-width: 560px) { *@,
+        @*     .form-row { *@,
+        @*         grid-template-columns: 1fr; *@,
+        @*         gap: 8px; *@,
+        @*     } *@,
+        @* } *@
+    </style>
+}
+
+<main class="main-content" role="main">
+    <div class="poll-details profile-details">
+        <h2 class="poll-question">Профиль</h2>
+
+        <form method="post" id="profileForm" class="poll-form">
+            <fieldset>
+                <div class="poll-options">
+                    <div class="form-row">
+                        <div class="form-label">Имя</div>
+                        <input class="form-input" type="text" name="Name" id="profileName" value="@Model?.Name" />
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-label">Email</div>
+                        <input class="form-input" type="text" name="Email" id="profileEmail" value="@Model?.Email" />
+                    </div>
+                </div>
+            </fieldset>
+
+            <div id="validationContainer"></div>
+
+            <button type="submit" id="saveProfileBtn" class="vote-button">Сохранить изменения</button>
+        </form>
+
+        <h2 class="poll-question section-title">Изменить пароль</h2>
+
+        <form method="post" id="changePasswordForm" class="poll-form">
+            <fieldset>
+                <div class="poll-options">
+                    <div class="form-row">
+                        <div class="form-label">Старый</div>
+                        <input class="form-input" type="password" name="CurrentPassword" id="currentPassword" placeholder="Введите старый пароль" />
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-label">Новый</div>
+                        <input class="form-input" type="password" name="NewPassword" id="newPassword" placeholder="Введите новый пароль" />
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-label">Ещё раз</div>
+                        <input class="form-input" type="password" name="ConfirmedPassword" id="confirmedPassword" placeholder="Повторите новый пароль" />
+                    </div>
+                </div>
+            </fieldset>
+
+            <div id="passwordValidationContainer"></div>
+
+            <button type="submit" id="changePasswordBtn" class="vote-button">Сменить пароль</button>
+        </form>
+    </div>
+
+    <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+    
+    <script>
+        window.CurrentName= @Html.Raw(Json.Serialize(Model?.Name));
+        window.CurrentEmail= @Html.Raw(Json.Serialize(Model?.Email));
+    </script>
+    
+    <script src="~/js/profile.js"></script>
+</main>

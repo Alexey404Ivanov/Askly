@@ -1,15 +1,16 @@
 ﻿using Askly.Application.DTOs.Users;
+using Askly.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Askly.Api.Controllers.Users;
 
 public class UsersController : Controller
 {
-    private readonly HttpClient _client;
-
-    public UsersController(IHttpClientFactory factory)
+    private readonly IUsersService _service;
+    public UsersController(IUsersService service)
     {
-        _client = factory.CreateClient("UsersApiClient");
+        _service = service;
     }
     
     [HttpGet("/register")]
@@ -24,12 +25,13 @@ public class UsersController : Controller
         return View("Login");
     }
 
-    [HttpGet("/profile")]
+    [Authorize]
+    [HttpGet("/me")]
     public async Task<IActionResult> Profile()
     {
-        var profile = await _client.GetFromJsonAsync<UserProfileDto>(
-            $"http://localhost:5000/api/users/profile");
+        var userId = Guid.Parse(User.FindFirst("userId")!.Value);
+        var profileDto = await _service.GetUserProfileInfo(userId);
         
-        return View("Profile");
+        return View("Profile", profileDto);
     }
 }

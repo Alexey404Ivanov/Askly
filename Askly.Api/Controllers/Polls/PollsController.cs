@@ -1,31 +1,31 @@
-﻿using Askly.Application.DTOs.Polls;
+﻿using Askly.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Askly.Api.Controllers.Polls;
 
 public class PollsController: Controller
 {
-    private readonly HttpClient _client;
+    private readonly IPollsService _service;
 
-    public PollsController(IHttpClientFactory factory)
+    public PollsController(IPollsService service)
     {
-        _client = factory.CreateClient("PollsApiClient");
+        _service = service;
     }
 
     [HttpGet("/polls")]
     public async Task<IActionResult> Index()
     {
-        var polls = await _client.GetFromJsonAsync<List<PollDto>>(
-            "http://localhost:5000/api/polls");
+        var polls = await _service.GetAll();
 
         return View("Index", polls);
     }
 
+    [Authorize]
     [HttpGet("/polls/{pollId:guid}")]
     public async Task<IActionResult> Details(Guid pollId)
     {
-        var poll = await _client.GetFromJsonAsync<PollDto>(
-            $"http://localhost:5000/api/polls/{pollId}");
+        var poll = await _service.GetById(pollId, Guid.Parse(User.FindFirst("userId")!.Value));
         
         return View("Details", poll);
     }

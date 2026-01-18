@@ -1,11 +1,50 @@
 ﻿const modalBackdrop = document.getElementById("modalBackdrop");
-const modal = document.getElementById("modal");
 const btnAdd = document.getElementById("btnAdd");
 const modalClose = document.getElementById("modalClose");
 const pollCreate = document.getElementById("pollCreate");
 const pollContainer = document.getElementById("answers");
+const toastContainer = document.getElementById('toastContainer');
 let answerCount = 0;
 const maxAnswers = 10;
+
+function showToast(message, timeout = 4000) {
+    if (!toastContainer) return () => {};
+
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = '<div class="toast-text"></div>';
+
+    const text = toast.querySelector('.toast-text');
+    text.textContent = message;
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'toast-close';
+    closeBtn.setAttribute('aria-label', 'Закрыть');
+    closeBtn.innerHTML = '&times;';
+
+    closeBtn.addEventListener('click', () => hideToast(toast));
+    toast.appendChild(closeBtn);
+
+    toastContainer.prepend(toast);
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => toast.classList.add('show'));
+    });
+
+    const removeTimer = setTimeout(() => hideToast(toast), timeout);
+
+    function hideToast(node) {
+        clearTimeout(removeTimer);
+        node.classList.remove('show');
+        node.classList.add('hide');
+        node.addEventListener('transitionend', () => {
+            if (node.parentNode) node.parentNode.removeChild(node);
+        }, { once: true });
+    }
+
+    return () => hideToast(toast);
+}
+
 
 function ensureWarningElement() {
     let warn = document.getElementById("formWarning");
@@ -94,6 +133,10 @@ function removeAnswer(btn) {
 }
 
 btnAdd.addEventListener("click", () => {
+    if (!window.isAuthenticated) {
+        showToast("Только авторизованные пользователи могут создавать опросы.");
+        return;
+    }
     modalBackdrop.style.display = "flex";
     if (answerCount === 0) {
         addAnswer();
@@ -111,6 +154,10 @@ window.addEventListener("click", (e) => {
         modalBackdrop.style.display = "none";
     }
 });
+
+function openProfile() {
+    window.location.href = "/me"
+}
 
 function logout() {
     fetch("/api/users/logout", {
@@ -130,12 +177,15 @@ function switchToAuthorization() {
 }
 
 function openPoll(id) {
+    if(!window.isAuthenticated) {
+        showToast("Только авторизованные пользователи могут переходить к опросу");
+        return;
+    }
     window.location.href = `/polls/${id}`;
 }
 
 pollCreate.addEventListener("click", function() {
     hideWarning();
-
     // 1. Получаем текст вопроса
     const questionInput = document.getElementById("questionInput");
     const question = questionInput?.value.trim() ?? "";
@@ -159,7 +209,7 @@ pollCreate.addEventListener("click", function() {
     } else if (questionInput) {
         clearInputError(questionInput);
     }
-    
+
     if (answerInputs.length === 0) {
         showWarning("Нет доступных вариантов ответа")
         hasError = true;
@@ -170,7 +220,7 @@ pollCreate.addEventListener("click", function() {
     if (answers.length < answerInputs.length) {
         if (hasError) showWarning("Поля вопроса и ответов не заполнены")
         else showWarning("Не все варианты заполнены");
-        
+
         hasError = true;
     } else {
         // подсветка пустых
@@ -220,13 +270,13 @@ pollCreate.addEventListener("click", function() {
     .catch(err => {
         showWarning(err.message);
     });
+
     
-    
-    // if (response.status === 'Error') {
-    //    
-    // }
-    // else {
-    //     // Можно закрыть модальное окно
-    //     modalBackdrop.style.display = "none";
-    // }
+    if (response.status === 'Error') {
+
+    }
+    else {
+        // Можно закрыть модальное окно
+        modalBackdrop.style.display = "none";
+    }
 });

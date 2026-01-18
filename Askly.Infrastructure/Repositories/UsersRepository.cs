@@ -32,4 +32,25 @@ public class UsersRepository : IUsersRepository
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Id == userId);
     }
+    
+    public async Task UpdateUserInfo(Guid userId, string name, string email)
+    {
+        await _context.Users
+            .Where(u => u.Id == userId)
+            .ExecuteUpdateAsync(u => u
+                .SetProperty(user => user.Name, name)
+                .SetProperty(user => user.Email, email));
+        
+        await _context.SaveChangesAsync();
+    }
+    
+    public async Task UpdateUserPassword(Guid userId, string newHashedPassword)
+    {
+        await _context.Users
+            .Where(u => u.Id == userId)
+            .ExecuteUpdateAsync(u => u
+                .SetProperty(user => user.HashedPassword, newHashedPassword));
+        
+        await _context.SaveChangesAsync();
+    }
 }

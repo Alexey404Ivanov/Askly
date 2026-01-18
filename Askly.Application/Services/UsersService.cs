@@ -49,4 +49,19 @@ public class UsersService : IUsersService
         var user = await _usersRepository.GetById(userId);
         return _mapper.Map<UserProfileDto>(user);
     }
+    
+    public async Task UpdateUserInfo(Guid userId, UpdateUserInfoDto updateDto)
+    {
+        await _usersRepository.UpdateUserInfo(userId, updateDto.Name, updateDto.Email);
+    }
+    
+    public async Task UpdateUserPassword(Guid userId, UpdateUserPasswordDto updateDto)
+    {
+        var user = await _usersRepository.GetById(userId);
+        var isPasswordValid = _hasher.VerifyPassword(updateDto.CurrentPassword, user!.HashedPassword);
+        if (!isPasswordValid) {} //do
+            
+        var hashedPassword = _hasher.HashPassword(updateDto.CurrentPassword);
+        await _usersRepository.UpdateUserPassword(userId, hashedPassword);
+    }
 }

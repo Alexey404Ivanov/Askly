@@ -59,14 +59,45 @@ public class UsersApiController: ControllerBase
     }
 
     [Authorize]
-    [HttpGet("profile")]
+    [HttpGet("me")]
     [Produces("application/json")]
     public async Task<ActionResult<UserProfileDto>> GetUserProfileInfo()
     {
         var userId = Guid.Parse(User.FindFirst("userId")!.Value);
-        var profileDto =  await _service.GetUserProfileInfo(userId);
+        var profileDto = await _service.GetUserProfileInfo(userId);
         
         return Ok(profileDto);
     }
 
+    [Authorize]
+    [HttpPut("me/info")]
+    [Produces("application/json")]
+    public async Task<ActionResult> UpdateUserProfileInfo([FromBody] UpdateUserInfoDto? updateDto)
+    {
+        if (updateDto == null)
+            return BadRequest();
+        if (!ModelState.IsValid)
+            return UnprocessableEntity(ModelState);
+        
+        var userId = Guid.Parse(User.FindFirst("userId")!.Value);
+        await _service.UpdateUserInfo(userId, updateDto);
+        
+        return NoContent();
+    }
+    
+    [Authorize]
+    [HttpPut("me/password")]
+    [Produces("application/json")]
+    public async Task<ActionResult> UpdateUserPassword([FromBody] UpdateUserPasswordDto? updateDto)
+    {
+        if (updateDto == null)
+            return BadRequest();
+        if (!ModelState.IsValid)
+            return UnprocessableEntity(ModelState);
+        
+        var userId = Guid.Parse(User.FindFirst("userId")!.Value);
+        await _service.UpdateUserPassword(userId, updateDto);
+        
+        return NoContent();
+    }
 }
