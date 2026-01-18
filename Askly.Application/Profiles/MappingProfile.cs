@@ -2,6 +2,7 @@
 using Askly.Domain;
 using Askly.Application.DTOs;
 using Askly.Application.DTOs.Polls;
+using Askly.Application.DTOs.Users;
 
 namespace Askly.Application.Profiles;
 
@@ -13,6 +14,7 @@ public class MappingProfile : Profile
         CreateMap<CreatePollDto, PollEntity>();
         CreateMap<CreateOptionDto, OptionEntity>();
         CreateMap<OptionEntity, OptionDto>();
+        CreateMap<UserEntity, UserProfileDto>();
         CreateMap<OptionEntity, VoteResultsDto>();
         CreateMap<Tuple<Guid, int>, VoteResultsDto>()
             .ForMember(

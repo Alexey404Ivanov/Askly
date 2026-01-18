@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Askly.Application.DTOs.Users;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Askly.Api.Controllers.Users;
 
@@ -24,8 +25,11 @@ public class UsersController : Controller
     }
 
     [HttpGet("/profile")]
-    public IActionResult Profile()
+    public async Task<IActionResult> Profile()
     {
+        var profile = await _client.GetFromJsonAsync<UserProfileDto>(
+            $"http://localhost:5000/api/users/profile");
+        
         return View("Profile");
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Askly.Application.DTOs.Users;
 using Askly.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Askly.Api.Controllers.Users;
@@ -49,14 +50,23 @@ public class UsersApiController: ControllerBase
         return Ok(token);
     }
     
+    [Authorize]
     [HttpPost("logout")]
     public IActionResult Logout()
     {
         HttpContext.Response.Cookies.Delete("jwt-token");
         return Ok();
     }
-    
-    // [HttpGet("profile")]
-    // [Produces("application/json")]
+
+    [Authorize]
+    [HttpGet("profile")]
+    [Produces("application/json")]
+    public async Task<ActionResult<UserProfileDto>> GetUserProfileInfo()
+    {
+        var userId = Guid.Parse(User.FindFirst("userId")!.Value);
+        var profileDto =  await _service.GetUserProfileInfo(userId);
+        
+        return Ok(profileDto);
+    }
 
 }

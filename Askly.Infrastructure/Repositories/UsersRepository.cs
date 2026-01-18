@@ -25,4 +25,11 @@ public class UsersRepository : IUsersRepository
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Email == email);
     }
+    
+    public async Task<UserEntity?> GetById(Guid userId)
+    {
+        return await _context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == userId);
+    }
 }

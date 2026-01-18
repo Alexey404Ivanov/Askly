@@ -1,7 +1,10 @@
-﻿using Askly.Application.Interfaces.Auth;
+﻿using Askly.Application.DTOs.Users;
+using Askly.Application.Interfaces.Auth;
 using Askly.Application.Interfaces.Repositories;
 using Askly.Application.Interfaces.Services;
 using Askly.Domain;
+using AutoMapper;
+
 namespace Askly.Application.Services;
 
 public class UsersService : IUsersService
@@ -9,12 +12,14 @@ public class UsersService : IUsersService
     private readonly IPasswordHasher _hasher;
     private readonly IUsersRepository _usersRepository;
     private readonly IJwtProvider _jwtProvider;
+    private readonly IMapper _mapper;
     
-    public UsersService(IPasswordHasher hasher, IUsersRepository usersRepository, IJwtProvider jwtProvider)
+    public UsersService(IPasswordHasher hasher, IUsersRepository usersRepository, IJwtProvider jwtProvider, IMapper mapper)
     {
         _hasher = hasher;
         _usersRepository = usersRepository;
         _jwtProvider = jwtProvider;
+        _mapper = mapper;
     }
     
     public async Task Register(string userName, string email, string password)
@@ -37,5 +42,11 @@ public class UsersService : IUsersService
         
         var token = _jwtProvider.GenerateToken(user);
         return token;
+    }
+
+    public async Task<UserProfileDto> GetUserProfileInfo(Guid userId)
+    {
+        var user = await _usersRepository.GetById(userId);
+        return _mapper.Map<UserProfileDto>(user);
     }
 }
