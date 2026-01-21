@@ -4,6 +4,8 @@
     container_name: askly_api
     depends_on:
       - postgres
+    command: >
+      sh -c "./wait-for-it.sh postgres:5432 -- dotnet Askly.Api.dll"
     environment:
       ConnectionStrings__DefaultConnection: >
         Host=postgres;
