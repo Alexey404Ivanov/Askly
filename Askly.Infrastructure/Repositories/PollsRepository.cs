@@ -41,51 +41,12 @@ public class PollsRepository : IPollsRepository
         return poll.Id;
     }
 
-    public async Task<bool> Delete(Guid pollId)
+    public async Task Delete(Guid pollId)
     {
         var poll = await _context.Poles
-            .Include(p => p.Options)    
             .FirstOrDefaultAsync(p => p.Id == pollId);
         
-        if (poll == null) return false;
-        
-        _context.Poles.Remove(poll);
+        _context.Poles.Remove(poll!);
         await _context.SaveChangesAsync();
-        
-        return true;
     }
-
-    // public async Task<bool> Vote(Guid pollId, List<Guid> optionsIds)
-    // {
-    //     await _context.Options
-    //         .Where(o => o.PollId == pollId)
-    //         .Where(o => optionsIds.Contains(o.Id))
-    //         .ExecuteUpdateAsync(s =>
-    //             s.SetProperty(
-    //                 o => o.VotesCount,
-    //                 o => o.VotesCount + 1
-    //             ));
-    //     
-    //     await _context.SaveChangesAsync();
-    //     return true;
-    // }
-    
-    
-
-    // public async Task DeleteVote(Guid pollId, Guid userId)
-    // {
-    //     await _context.Votes
-    //         .Where(v => v.PollId == pollId && v.UserId == userId)
-    //         .ExecuteDeleteAsync();
-    //     
-    //     await _context.SaveChangesAsync();
-    // }
-
-    // public async Task<List<VoteEntity>> GetVotesAsync(Guid pollId)
-    // {
-    //     return await _context.Votes
-    //         .Where(v => v.PollId == pollId)
-    //         .ToListAsync();
-    // }
-    
 }

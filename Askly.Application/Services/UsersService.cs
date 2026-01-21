@@ -1,4 +1,5 @@
 ﻿using Askly.Application.DTOs.Users;
+using Askly.Application.Exceptions;
 using Askly.Application.Interfaces.Auth;
 using Askly.Application.Interfaces.Repositories;
 using Askly.Application.Interfaces.Services;
@@ -22,10 +23,14 @@ public class UsersService : IUsersService
         _mapper = mapper;
     }
     
-    public async Task Register(string userName, string email, string password)
+    public async Task Register(string name, string email, string password)
     {
+        var existingUser = await _usersRepository.GetByEmail(email);
+        if (existingUser != null)
+            throw new UserAlreadyExistsException();
+        
         var hashedPassword = _hasher.HashPassword(password);
-        var user = UserEntity.Create(userName, email, hashedPassword);
+        var user = UserEntity.Create(name, email, hashedPassword);
         await _usersRepository.Add(user);
     }
 
@@ -33,12 +38,11 @@ public class UsersService : IUsersService
     {
         var user = await _usersRepository.GetByEmail(email);
         if (user == null)
-            throw new Exception("User not found");
-        var isPasswordValid = _hasher.VerifyPassword(password, user.HashedPassword);
+            throw new UserNotFoundException(email);
+        
+        var isPasswordValid = _hasher.VerifyPassword(user.HashedPassword, password);
         if (!isPasswordValid)
-        {
-            throw new Exception("Invalid password");
-        }
+            throw new InvalidPasswordException();
         
         var token = _jwtProvider.GenerateToken(user);
         return token;
@@ -50,18 +54,20 @@ public class UsersService : IUsersService
         return _mapper.Map<UserProfileDto>(user);
     }
     
-    public async Task UpdateUserInfo(Guid userId, UpdateUserInfoDto updateDto)
+    public async Task UpdateUserInfo(Guid userId, string name, string email)
     {
-        await _usersRepository.UpdateUserInfo(userId, updateDto.Name, updateDto.Email);
+        await _usersRepository.UpdateUserInfo(userId, name, email);
     }
     
-    public async Task UpdateUserPassword(Guid userId, UpdateUserPasswordDto updateDto)
+    public async Task UpdateUserPassword(Guid userId, string currentPassword, string newPassword)
     {
         var user = await _usersRepository.GetById(userId);
-        var isPasswordValid = _hasher.VerifyPassword(updateDto.CurrentPassword, user!.HashedPassword);
-        if (!isPasswordValid) {} //do
-            
-        var hashedPassword = _hasher.HashPassword(updateDto.CurrentPassword);
+        
+        var isPasswordValid = _hasher.VerifyPassword(user!.HashedPassword, currentPassword);
+        if (!isPasswordValid)
+            throw new InvalidPasswordException();
+        
+        var hashedPassword = _hasher.HashPassword(newPassword);
         await _usersRepository.UpdateUserPassword(userId, hashedPassword);
     }
 }

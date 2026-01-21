@@ -4,6 +4,7 @@ namespace Askly.Application.DTOs.Polls;
 
 public class CreateOptionDto
 {
-    [Required]
-    public string Text { get; set; }
+    [Required(ErrorMessage = "Необходимо задать текст варианта ответа")]
+    [MaxLength(50, ErrorMessage = "Недопустимая длина ответа. Максимум 50 символов")]
+    public string Text { get; init; }
 }

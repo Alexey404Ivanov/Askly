@@ -1,5 +1,5 @@
-﻿using Askly.Application.Interfaces.Repositories;
-using Askly.Application.DTOs;
+﻿using System.Collections.Frozen;
+using Askly.Application.Interfaces.Repositories;
 using Askly.Application.DTOs.Polls;
 using Askly.Domain;
 using Askly.Application.Exceptions;
@@ -26,17 +26,12 @@ public class PollsService : IPollsService
     
     public async Task<PollDto> GetById(Guid pollId, Guid userId)
     {
-        // var votedOptions = (await _repo.GetVotesAsync(pollId))
-        //     .Where(v => v.AnonUserId == anonUserId)
-        //     .Select(v => v.OptionId)
-        //     .ToList();
-        
         var poll = await _pollsRepository.GetById(pollId);
+        if (poll == null)
+            throw new PollNotFoundException(pollId);
+        
         var votedOptions = await _votesRepository.GetUserVotedOptionIds(pollId, userId);
         
-        // if (votedOptions.Count == 0)
-        //     return _mapper.Map<PollDto>(poll);
-        //
         var dto = _mapper.Map<PollDto>(poll);
         dto.UserVotes = votedOptions;
         return dto;
@@ -44,14 +39,14 @@ public class PollsService : IPollsService
     
     public async Task<Guid> Create(
         string title,
-        List<CreateOptionDto> options,
+        string[] options,
         bool isMultipleChoice,
         Guid userId)
     {
         var poll = PollEntity.Create(title, isMultipleChoice, userId);
         
-        foreach (var optionDto in options)
-            poll.AddOption(optionDto.Text);
+        foreach (var option in options)
+            poll.AddOption(option);
         
         return await _pollsRepository.Add(poll);
     }
@@ -62,35 +57,51 @@ public class PollsService : IPollsService
         return _mapper.Map<List<PollDto>>(polls);
     }
     
-    public async Task DeletePoll(Guid id)
+    public async Task DeletePoll(Guid pollId, Guid userId)
     {
-        // var poll = await _repo.GetIfExists(id);
-        // if (poll == null)
-        //     throw new PollNotFoundException(id);
-        var isDeletedSucceed = await _pollsRepository.Delete(id);
-        if (!isDeletedSucceed)
-            throw new PollNotFoundException(id);
+        var poll = await _pollsRepository.GetById(pollId);
+        if (poll == null)
+            throw new PollNotFoundException(pollId);
+        
+        if (poll.UserId != userId)
+            throw new ForbiddenException(pollId);
+        
+        await _pollsRepository.Delete(pollId);
     }
     
-    // public async Task Vote(Guid id, List<Guid> optionsIds)
-    // {
-    //     var isVoteSucceed = await _pollsRepository.Vote(id, optionsIds);
-    //     if (!isVoteSucceed)
-    //         throw new PollNotFoundException(id);
-    // }
-    
-    public async Task VoteAsync(Guid pollId, List<Guid> optionsIds, Guid userId)
+    public async Task Vote(Guid pollId, Guid[] optionsIds, Guid userId)
     {
-        await _votesRepository.VoteAsync(pollId, optionsIds, userId);
+        var poll = await _pollsRepository.GetById(pollId);
+        if (poll == null)
+            throw new PollNotFoundException(pollId);
+        
+        var pollOptionsIds = poll.Options.Select(o => o.Id).ToFrozenSet();
+        var notFoundOptions = optionsIds.Where(id => !pollOptionsIds.Contains(id)).ToArray();
+        if (notFoundOptions.Length != 0)
+            throw new PollOptionsNotFoundException(notFoundOptions);
+        
+        await _votesRepository.Vote(pollId, optionsIds, userId);
     }
 
     public async Task DeleteVote(Guid pollId, Guid userId)
     {
+        var poll = await _pollsRepository.GetById(pollId);
+        if (poll == null)
+            throw new PollNotFoundException(pollId);
+        
+        var userVotes = await _votesRepository.GetUserVotedOptionIds(pollId, userId);
+        if (userVotes.Count == 0)
+            throw new VoteNotFoundException();
+        
         await _votesRepository.DeleteVote(pollId, userId);
     }
     
     public async Task<List<VoteResultsDto>> GetResults(Guid pollId)
     {
+        var poll = await _pollsRepository.GetById(pollId);
+        if (poll == null)
+            throw new PollNotFoundException(pollId);
+        
         var votedOptions = await _votesRepository.GetResults(pollId);
         var votedUsersCount = await _votesRepository.GetVotedUsersCount(pollId);
         var allOptionGuids = (await _pollsRepository.GetById(pollId))!.Options.Select(x => x.Id).ToList();
@@ -118,18 +129,4 @@ public class PollsService : IPollsService
         }
         return results;
     }
-    // public void DeleteVote(Guid pollId, List<Guid> optionsIds)
-    // {
-    //     if (_repo.FindById(pollId) == null)
-    //         throw new PollNotFoundException(pollId);
-    //     _repo.UpdateVotes(pollId, optionsIds, true);
-    // }
-    //
-    
-    //
-    // public PollResultsDto ShowResults(Guid pollId)
-    // {
-    //     var poll = _repo.FindById(pollId);
-    //     return poll == null ? throw new PollNotFoundException(pollId) : _mapper.Map<PollResultsDto>(poll);
-    // }
 }

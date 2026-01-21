@@ -21,19 +21,17 @@ public class VotesRepository : IVotesRepository
             .ToListAsync();
     }
 
-    public async Task VoteAsync(Guid pollId, List<Guid> optionIds, Guid userId)
+    public async Task Vote(Guid pollId, Guid[] optionIds, Guid userId)
     {
-        // удаляем старые голоса пользователя
+        
         await _context.Votes
             .Where(v => v.PollId == pollId && v.UserId == userId)
             .ExecuteDeleteAsync();
-    
-        // добавляем новые
+        
         var votes = optionIds
             .Select(optionId => 
                 VoteEntity.Create(userId, pollId, optionId));
         
-    
         await _context.Votes.AddRangeAsync(votes);
         await _context.SaveChangesAsync();
     }
@@ -58,12 +56,6 @@ public class VotesRepository : IVotesRepository
     }
     public async Task<List<Tuple<Guid, int>>> GetResults(Guid pollId)
     {
-        // return await _context.Options
-        //     .AsNoTracking()
-        //     .Where(o => o.PollId == pollId)
-        //     .Select(o => new Tuple<Guid, int>(o.Id, o.VotesCount))
-        //     .ToListAsync();
-        
         return await _context.Votes
             .AsNoTracking()
             .Where(v => v.PollId == pollId)

@@ -4,8 +4,9 @@ namespace Askly.Application.DTOs.Users;
 
 public class LoginUserDto
 {
-    [Required]
-    public string Email { get; set; }
-    [Required]
-    public string Password { get; set; }
+    [Required(ErrorMessage = "Необходимо указать емэйл")]
+    public string Email { get; init; }
+    
+    [Required(ErrorMessage = "Необходимо указать пароль")]
+    public string Password { get; init; }
 }

@@ -5,7 +5,7 @@ namespace Askly.Application.DTOs.Users;
 public class UserProfileDto
 {
     [Required]
-    public string Name { get; set; }
+    public string Name { get; init; }
     [Required]
-    public string Email { get; set; }
+    public string Email { get; init; }
 }

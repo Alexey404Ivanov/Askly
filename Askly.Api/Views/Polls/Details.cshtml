@@ -8,6 +8,14 @@
     <link rel="stylesheet" href="~/css/details.css" />
 }
 
+@section HeaderExtras
+{
+    @if (Model.UserId == Guid.Parse(User.FindFirst("userId")!.Value))
+    {
+        <button id="deletePoll" class="add-button btn-palette">Удалить опрос</button>
+    }
+}
+
 <main class="main-content" role="main">
     <div id="poleData" 
          data-model="@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model))">

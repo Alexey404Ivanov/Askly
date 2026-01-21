@@ -31,7 +31,7 @@
     }
 
     form.addEventListener('submit', async function (e) {
-        e.preventDefault(); // 🔥 СРАЗУ
+        e.preventDefault(); 
 
         const userName = document.getElementById('regName').value.trim();
         const email = document.getElementById('regEmail').value.trim();
@@ -41,7 +41,35 @@
             showToast('Не все поля заполнены');
             return;
         }
+        
+        if (userName.length < 2) {
+            showToast('Имя должно содержать не менее 2 символов');
+            return;
+        }
+        
+        if (userName.length > 30) {
+            showToast('Имя должно содержать не более 30 символов');
+            return;
+        }
+        if (password.length < 5) {
+            showToast('Новый пароль должен содержать не менее 5 символов');
+            return;
+        }
 
+        if (password.length > 30) {
+            showToast('Новый пароль должен содержать не более 30 символов');
+            return;
+        }
+        
+        const standardEmailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        function validateEmail(email) {
+            return standardEmailRegex.test(email);
+        }
+
+        if (!validateEmail(email)) {
+            showToast('Некорректный формат email');
+            return;
+        }
         try {
             await fetch("/api/users/register", {
                 method: "POST",

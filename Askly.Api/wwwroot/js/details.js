@@ -1,8 +1,9 @@
 ﻿// javascript
 document.addEventListener('DOMContentLoaded', function () {
     const voteBtn = document.getElementById('voteBtn');
+    const deletePoll = document.getElementById('deletePoll');
     const toastContainer = document.getElementById('toastContainer');
-
+    
     if (!voteBtn) return;
 
     function showToast(message, timeout = 4000) {
@@ -129,6 +130,24 @@ document.addEventListener('DOMContentLoaded', function () {
         return btn;
     }
 
+    deletePoll.addEventListener('click', async function (e) {
+        e.preventDefault();
+        const formScope = voteBtn.closest('form') || document;
+        const pollInput = formScope.querySelector('input[name="Id"], input[id="Id"], input[type="hidden"]');
+        const pollId = pollInput ? String(pollInput.value) : '';
+        try {
+            await fetch(`/api/polls/${pollId}`, {
+                method: "DELETE",
+                credentials: "include" // важно для cookie
+            });
+            window.location.href = "/polls";
+        }
+        catch (err) {
+            console.error(err);
+            showToast("Не удалось удалить опрос");
+        }
+    })
+    
     // обработчик клика по "Голосовать"
     voteBtn.addEventListener('click', function (e) {
         e.preventDefault();

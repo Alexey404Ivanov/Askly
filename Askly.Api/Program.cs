@@ -1,6 +1,6 @@
 ﻿using Askly.Api.Extensions;
-using Askly.Api.Handlers;
-using Askly.Api.Middleware;
+using Askly.Api.Filters;
+using Askly.Api.Middlewares;
 using Askly.Application.Interfaces.Auth;
 using Askly.Application.Interfaces.Repositories;
 using Askly.Application.Interfaces.Services;
@@ -32,7 +32,18 @@ builder.Services.Configure<JwtOptions>(configuration.GetSection(nameof(JwtOption
 
 builder.Services.AddApiAuthentication(configuration);
 
-builder.Services.AddControllers();   
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<ValidationFilter>();
+});   
+
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        // отключаем автоматическую 400
+        options.SuppressModelStateInvalidFilter = true;
+    });
+
 
 builder.Services.AddEndpointsApiExplorer(); 
 
@@ -72,6 +83,9 @@ if (app.Environment.IsDevelopment())
     
     app.UseSwaggerUI();
 }
+
+app.UseMiddleware<ExceptionHandlerMiddleware>();
+
 app.UseRouting();
 
 app.Use(async (context, next) =>
@@ -80,8 +94,6 @@ app.Use(async (context, next) =>
     await next();
     Console.WriteLine($"Outgoing: {context.Response.StatusCode}");
 });
-
-// app.UseMiddleware<AnonymousUserMiddleware>();
 
 app.UseAuthentication();
 

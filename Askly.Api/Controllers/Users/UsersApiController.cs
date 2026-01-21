@@ -17,27 +17,16 @@ public class UsersApiController: ControllerBase
     }
     
     [HttpPost("register")]
-    [Produces("application/json")]
-    public async Task<ActionResult> Register([FromBody] RegisterUserDto? userDto)
+    public async Task<ActionResult> Register([FromBody] RegisterUserDto userDto)
     {
-        if (userDto == null)
-            return BadRequest();
-        if (!ModelState.IsValid)
-            return UnprocessableEntity(ModelState);
-        
         await _service.Register(userDto.UserName, userDto.Email, userDto.Password);
-        return Ok();
+        return NoContent();
     }
     
     [HttpPost("login")]
     [Produces("application/json")]
-    public async Task<ActionResult> Login([FromBody] LoginUserDto? userDto)
+    public async Task<ActionResult> Login([FromBody] LoginUserDto userDto)
     {
-        if (userDto == null)
-            return BadRequest();
-        if (!ModelState.IsValid)
-            return UnprocessableEntity(ModelState);
-        
         var token = await _service.Login(userDto.Email, userDto.Password);
         
         HttpContext.Response.Cookies.Append("jwt-token", token, new CookieOptions
@@ -55,7 +44,7 @@ public class UsersApiController: ControllerBase
     public IActionResult Logout()
     {
         HttpContext.Response.Cookies.Delete("jwt-token");
-        return Ok();
+        return NoContent();
     }
 
     [Authorize]
@@ -71,32 +60,20 @@ public class UsersApiController: ControllerBase
 
     [Authorize]
     [HttpPut("me/info")]
-    [Produces("application/json")]
-    public async Task<ActionResult> UpdateUserProfileInfo([FromBody] UpdateUserInfoDto? updateDto)
+    public async Task<ActionResult> UpdateUserProfileInfo([FromBody] UpdateUserInfoDto updateDto)
     {
-        if (updateDto == null)
-            return BadRequest();
-        if (!ModelState.IsValid)
-            return UnprocessableEntity(ModelState);
-        
         var userId = Guid.Parse(User.FindFirst("userId")!.Value);
-        await _service.UpdateUserInfo(userId, updateDto);
+        await _service.UpdateUserInfo(userId, updateDto.Name, updateDto.Email);
         
         return NoContent();
     }
     
     [Authorize]
     [HttpPut("me/password")]
-    [Produces("application/json")]
-    public async Task<ActionResult> UpdateUserPassword([FromBody] UpdateUserPasswordDto? updateDto)
+    public async Task<ActionResult> UpdateUserPassword([FromBody] UpdateUserPasswordDto updateDto)
     {
-        if (updateDto == null)
-            return BadRequest();
-        if (!ModelState.IsValid)
-            return UnprocessableEntity(ModelState);
-        
         var userId = Guid.Parse(User.FindFirst("userId")!.Value);
-        await _service.UpdateUserPassword(userId, updateDto);
+        await _service.UpdateUserPassword(userId, updateDto.CurrentPassword, updateDto.NewPassword);
         
         return NoContent();
     }

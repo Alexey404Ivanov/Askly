@@ -2,6 +2,6 @@
 
 public class PollNotFoundException : ApplicationExceptionBase
 {
-    public PollNotFoundException(Guid pollId) : 
-        base($"Poll with id {pollId} not found") { }
+    public PollNotFoundException(Guid pollId)
+        : base($"Опрос с идентификатором {pollId} не найден") { }
 }

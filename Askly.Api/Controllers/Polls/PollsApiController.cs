@@ -23,22 +23,8 @@ public class PollsApiController : ControllerBase
     public async Task<ActionResult<PollDto>> GetById([FromRoute] Guid pollId)
     {
         var userId = Guid.Parse(User.FindFirst("userId")!.Value);
-        // var anonUserId = (Guid)HttpContext.Items["AnonUserId"]!;
-        try
-        {
-            var poll = await _service.GetById(pollId, userId);
-            return Ok(poll);
-        }
-        catch (PollNotFoundException e)
-        {
-            return NotFound(e.Message);
-        }
-        
-        // var pole = _repo.FindById(poleId);
-        // if (pole == null)
-        //     return NotFound();
-        // var dto = _mapper.Map<PoleDto>(pole);
-        // return Ok(dto);
+        var poll = await _service.GetById(pollId, userId);
+        return Ok(poll);
     }
     
     [HttpGet]
@@ -52,63 +38,42 @@ public class PollsApiController : ControllerBase
     [Authorize]
     [HttpPost]
     [Produces("application/json", "application/xml")]
-    public async Task<ActionResult<Guid>> Create([FromBody] CreatePollDto? pollDto)
+    public async Task<ActionResult<Guid>> Create([FromBody] CreatePollDto pollDto)
     {
         var userId = Guid.Parse(User.FindFirst("userId")!.Value);
-        
-        if (pollDto == null)
-            return BadRequest();
-        if (!ModelState.IsValid)
-            return UnprocessableEntity(ModelState);
-        var createdPollId = await _service.Create(pollDto.Title, pollDto.Options, pollDto.IsMultipleChoice, userId);
+        var options = pollDto.Options.Select(optionDto => optionDto.Text).ToArray();
+        var createdPollId = await _service.Create(pollDto.Title, options, (bool)pollDto.IsMultipleChoice!, userId);
         return Ok(createdPollId);
     }
     
     [Authorize]
     [HttpPost("{pollId:guid}/vote")]
     [Produces("application/json")]
-    public async Task<IActionResult> Vote([FromRoute] Guid pollId, [FromBody] List<Guid> optionsIds)
+    public async Task<IActionResult> Vote([FromRoute] Guid pollId, [FromBody] CreateVoteDto voteDto)
     {
         var userId = Guid.Parse(User.FindFirst("userId")!.Value);
 
-        await _service.VoteAsync(
-            pollId,
-            optionsIds,
-            userId);
+        await _service.Vote(pollId, voteDto.OptionIds, userId);
 
-        return Ok();
+        return NoContent();
     }
 
     [Authorize]
     [HttpDelete("{pollId:guid}")]
     public async Task<ActionResult> DeletePoll([FromRoute] Guid pollId)
     {
-        try
-        {
-            await _service.DeletePoll(pollId);
-            return NoContent();
-        }
-        catch (PollNotFoundException e)
-        {
-            return NotFound(e.Message);
-        }
+        var userId = Guid.Parse(User.FindFirst("userId")!.Value);
+        await _service.DeletePoll(pollId, userId);
+        return NoContent();
     }
 
     [Authorize]
     [HttpDelete("{pollId:guid}/vote")]
-    [Produces("application/json")]
     public async Task<ActionResult> DeleteVote([FromRoute] Guid pollId)
     {
         var userId = Guid.Parse(User.FindFirst("userId")!.Value);
-        try
-        {
-            await _service.DeleteVote(pollId, userId);
-            return NoContent();
-        }
-        catch (PollNotFoundException e)
-        {
-            return NotFound(e.Message);
-        }
+        await _service.DeleteVote(pollId, userId);
+        return NoContent();
     }
 
 
@@ -117,14 +82,7 @@ public class PollsApiController : ControllerBase
     [Produces("application/json")]
     public async Task<ActionResult<List<VoteResultsDto>>> ShowResults([FromRoute] Guid pollId)
     {
-        try
-        {
-            var resultsDto = await _service.GetResults(pollId);
-            return Ok(resultsDto);
-        }
-        catch (PollNotFoundException e)
-        {
-            return NotFound(e.Message);
-        }
+        var resultsDto = await _service.GetResults(pollId);
+        return Ok(resultsDto);
     }
 }

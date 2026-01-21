@@ -2,7 +2,7 @@
 
 public class VoteResultsDto
 {
-    public Guid OptionId { get; set; }
-    public int VotesCount { get; set; }
-    public double Ratio { get; set; }
+    public Guid OptionId { get; init; }
+    public int VotesCount { get; init; }
+    public double Ratio { get; init; }
 }

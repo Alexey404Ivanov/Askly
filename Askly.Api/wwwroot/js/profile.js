@@ -35,24 +35,32 @@
         const name = document.getElementById('profileName').value.trim();
         const email = document.getElementById('profileEmail').value.trim();
         
-        const currentName = window.CurrentName;
-        const currentEmail = window.CurrentEmail;
-        
         if (!name || !email) {
             showToast('Не все поля заполнены');
             return;
         }
-
-        if (name === currentName){
-            showToast('Имя не изменилось');
+        const standardEmailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        function validateEmail(email) {
+            return standardEmailRegex.test(email);
+        }
+        
+        if (!validateEmail(email)) {
+            showToast('Некорректный формат email');
             return;
         }
-
-        if (email === currentEmail){
-            showToast('Email не изменился');
+        
+        if (name.length < 2)
+        {
+            showToast('Имя должно содержать не менее 2 символов');
             return;
         }
-            
+        
+        if (name.length > 30)
+        {
+            showToast('Имя должно содержать не более 30 символов');
+            return;
+        }
+        
         try {
             await fetch("/api/users/me/info", {
                 method: "PUT",
@@ -80,12 +88,22 @@
             return;
         }
         
+        if (newPassword.length < 5) {
+            showToast('Новый пароль должен содержать не менее 5 символов');
+            return;
+        }
+        
+        if (newPassword.length > 30) {
+            showToast('Новый пароль должен содержать не более 30 символов');
+            return;
+        }
+        
         if (newPassword !== confirmedPassword) {
             showToast('Новые пароли не совпадают');
             return;
         }
 
-        if (currentPassword !== newPassword) {
+        if (currentPassword === newPassword) {
             showToast('Новый пароль должен отличаться от текущего');
             return;
         }
@@ -96,12 +114,21 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ currentPassword: currentPassword, newPassword: newPassword }),
                 credentials: "include" // важно для cookie
-            });
+            }).then(response => {
+                if (!response.ok) {
+                    if (response.status === 400) {
+                        throw new Error("Введен неверный текущий пароль");
+                    } else {
+                        throw new Error("Не удалось обновить пароль");
+                    }
+                }
+            })
+            changePasswordForm.reset()
             showToast("Пароль обновлен");
         }
         catch (err) {
             console.error(err);
-            showToast("Не удалось обновить пароль");
+            showToast(err.message);
         }
     });
 

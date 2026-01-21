@@ -1,11 +1,17 @@
-﻿const modalBackdrop = document.getElementById("modalBackdrop");
+﻿// `Askly.Api/wwwroot/js/index.js`
+
+const modalBackdrop = document.getElementById("modalBackdrop");
 const btnAdd = document.getElementById("btnAdd");
 const modalClose = document.getElementById("modalClose");
 const pollCreate = document.getElementById("pollCreate");
 const pollContainer = document.getElementById("answers");
 const toastContainer = document.getElementById('toastContainer');
 let answerCount = 0;
-const maxAnswers = 10;
+const maxAnswers = 9;
+
+const QUESTION_MIN_LEN = 10;
+const QUESTION_MAX_LEN = 75;
+const ANSWER_MAX_LEN = 50;
 
 function showToast(message, timeout = 4000) {
     if (!toastContainer) return () => {};
@@ -45,7 +51,6 @@ function showToast(message, timeout = 4000) {
     return () => hideToast(toast);
 }
 
-
 function ensureWarningElement() {
     let warn = document.getElementById("formWarning");
     if (!warn) {
@@ -55,7 +60,6 @@ function ensureWarningElement() {
         warn.style.marginTop = "8px";
         warn.style.fontSize = "0.95rem";
         warn.style.display = "none";
-        // вставляем предупреждение под контейнер с вариантами, если он есть
         if (pollContainer && pollContainer.parentElement) {
             pollContainer.parentElement.insertBefore(warn, pollContainer.nextSibling);
         } else {
@@ -88,13 +92,20 @@ function clearInputError(input) {
 
 function addInputListeners(input) {
     input.addEventListener("input", () => {
-        if (input.value.trim() !== "") {
+        const v = input.value.trim();
+        if (v !== "") {
             clearInputError(input);
-            // если больше никаких ошибок — скрыть предупреждение
-            const anyError = Array.from(document.querySelectorAll("#answers .answer-row input"))
-                .some(i => i.value.trim() === "");
-            const questionEmpty = document.getElementById("questionInput")?.value.trim() === "";
-            if (!anyError && !questionEmpty) hideWarning();
+
+            const anyAnswerError = Array.from(document.querySelectorAll("#answers .answer-row input"))
+                .some(i => {
+                    const tv = i.value.trim();
+                    return tv === "" || tv.length > ANSWER_MAX_LEN;
+                });
+
+            const qv = document.getElementById("questionInput")?.value.trim() ?? "";
+            const questionError = qv.length < QUESTION_MIN_LEN || qv.length > QUESTION_MAX_LEN;
+
+            if (!anyAnswerError && !questionError) hideWarning();
         }
     });
 }
@@ -121,7 +132,10 @@ function addAnswer() {
     addInputListeners(input);
 
     const hint = document.getElementById("hint");
-    hint.innerText = `Можно добавить ещё ${maxAnswers - answerCount} вариантов ответа.`;
+    if (answerCount === maxAnswers)
+        hint.innerText = `Достигнуто максимальное количество вариантов ответа.`;
+    else
+        hint.innerText = `Можно добавить ещё ${maxAnswers - answerCount} вариантов ответа.`;
 }
 
 function removeAnswer(btn) {
@@ -148,7 +162,6 @@ modalClose.addEventListener("click", () => {
     modalBackdrop.style.display = "none";
 });
 
-// Закрытие при клике по фону
 window.addEventListener("click", (e) => {
     if (e.target === modalBackdrop) {
         modalBackdrop.style.display = "none";
@@ -186,11 +199,10 @@ function openPoll(id) {
 
 pollCreate.addEventListener("click", function() {
     hideWarning();
-    // 1. Получаем текст вопроса
+
     const questionInput = document.getElementById("questionInput");
     const question = questionInput?.value.trim() ?? "";
 
-    // 2. Получаем все варианты ответа
     const answerInputs = document.querySelectorAll("#answers .answer-row input");
     const answers = [];
     answerInputs.forEach(input => {
@@ -200,10 +212,15 @@ pollCreate.addEventListener("click", function() {
         }
     });
 
-    // Валидация: вопрос не пустой
     let hasError = false;
+
+    // Валидация вопроса: не пустой + длина 10..75
     if (!question) {
         showWarning("Поле вопроса не должно быть пустым.");
+        if (questionInput) markInputError(questionInput);
+        hasError = true;
+    } else if (question.length < QUESTION_MIN_LEN || question.length > QUESTION_MAX_LEN) {
+        showWarning(`Вопрос должен быть от ${QUESTION_MIN_LEN} до ${QUESTION_MAX_LEN} символов.`);
         if (questionInput) markInputError(questionInput);
         hasError = true;
     } else if (questionInput) {
@@ -211,72 +228,72 @@ pollCreate.addEventListener("click", function() {
     }
 
     if (answerInputs.length === 0) {
-        showWarning("Нет доступных вариантов ответа")
+        showWarning("Нет доступных вариантов ответа");
         hasError = true;
         return;
     }
 
-    // Валидация: все варианты не пустые и их должно быть хотя бы 1
-    if (answers.length < answerInputs.length) {
-        if (hasError) showWarning("Поля вопроса и ответов не заполнены")
-        else showWarning("Не все варианты заполнены");
+    // Валидация вариантов: заполнены + длина <= 50
+    let anyEmpty = false;
+    let anyTooLong = false;
 
-        hasError = true;
-    } else {
-        // подсветка пустых
-        answerInputs.forEach(input => {
-            if (input.value.trim() === "") {
-                markInputError(input);
-                hasError = true;
-            } else {
-                clearInputError(input);
-            }
-            // добавляем слушатель на ввод для очистки ошибки
-            addInputListeners(input);
-        });
-        if (hasError && !document.getElementById("formWarning")?.innerText) {
-            showWarning("Пожалуйста, заполните все варианты ответа.");
+    answerInputs.forEach(input => {
+        const v = input.value.trim();
+
+        if (v === "") {
+            anyEmpty = true;
+            markInputError(input);
+        } else if (v.length > ANSWER_MAX_LEN) {
+            anyTooLong = true;
+            markInputError(input);
+        } else {
+            clearInputError(input);
         }
+
+        addInputListeners(input);
+    });
+
+    if (anyTooLong) {
+        showWarning(`Вариант ответа не должен превышать ${ANSWER_MAX_LEN} символов.`);
+        hasError = true;
+    } else if (anyEmpty) {
+        if (hasError) showWarning("Поля вопроса и ответов не заполнены");
+        else showWarning("Не все варианты заполнены");
+        hasError = true;
     }
 
-    if (hasError) return; // отменяем отправку
+    if (hasError) return;
 
-    // 3. Получаем флаг "несколько ответов"
     const IsMultipleChoice = document.getElementById("multi")?.checked;
 
-    // 4. Собираем объект
     const questionObj = {
         title: question,
         options: answers,
         IsMultipleChoice: IsMultipleChoice
     };
 
-    // 5. Сериализуем в JSON
     const json = JSON.stringify(questionObj, null, 2);
 
-    // 6. Отправка на сервер
     fetch("/api/polls", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: json
     })
-    .then(r => {
-        if (!r.ok) throw new Error("Ошибка создания опроса");
-        return r.json();
-    })
-    .then(id => {
-        window.location.href = `/polls/${id}`;
-    })
-    .catch(err => {
-        showWarning(err.message);
-    });
+        .then(r => {
+            if (!r.ok) throw new Error("Ошибка создания опроса");
+            return r.json();
+        })
+        .then(id => {
+            window.location.href = `/polls/${id}`;
+        })
+        .catch(err => {
+            showWarning(err.message);
+        });
 
-    
     if (response.status === 'Error') {
 
     }
     else {
-        // Можно закрыть модальное окно
         modalBackdrop.style.display = "none";
     }
 });
